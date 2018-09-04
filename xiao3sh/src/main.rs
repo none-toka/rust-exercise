@@ -1,9 +1,9 @@
 use std::io::{self, Write};
 
 fn split_line(line: &str) -> impl Iterator<Item=&str> {
-    // TODO fix
-    line.trim().split(char::is_whitespace)
+    line.trim().split_whitespace()
 }
+
 fn execute<'a, I: Iterator<Item = &'a str>>(args: I) -> io::Result<()> {
     // TODO implement
     for arg in args {
