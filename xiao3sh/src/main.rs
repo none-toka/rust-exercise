@@ -1,15 +1,33 @@
-use std::io::{self, Write};
+use std::io::{self, Error, ErrorKind, Write};
 
-fn split_line(line: &str) -> impl Iterator<Item=&str> {
+fn split_line(line: &str) -> impl Iterator<Item = &str> {
     line.trim().split_whitespace()
 }
 
-fn execute<'a, I: Iterator<Item = &'a str>>(args: I) -> io::Result<()> {
+fn find_builtin<'a, I>(cmd: &str) -> Option<fn((I)) -> io::Result<()>>
+where
+    I: Iterator<Item = &'a str>,
+{
     // TODO implement
-    for arg in args {
-        println!("{}", arg);
-    }
+    None
+}
+
+fn launch<'a, I>(cmd: &str, args: I) -> io::Result<()>
+where
+    I: Iterator<Item = &'a str>,
+{
+    // TODO implement
     Ok(())
+}
+
+fn execute<'a, I: Iterator<Item = &'a str>>(mut args: I) -> io::Result<()> {
+    match args.next() {
+        Some(cmd) => match find_builtin::<I>(&cmd) {
+            Some(func) => func(args),
+            None => launch(cmd, args),
+        },
+        None => Err(Error::new(ErrorKind::InvalidInput, "command is not given")),
+    }
 }
 
 fn main_loop() -> io::Result<()> {
