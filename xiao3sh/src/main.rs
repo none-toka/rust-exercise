@@ -4,7 +4,7 @@ fn split_line(line: &str) -> impl Iterator<Item = &str> {
     line.trim().split_whitespace()
 }
 
-fn find_builtin<'a, I>(cmd: &str) -> Option<fn((I)) -> io::Result<()>>
+fn find_builtin<'a, I>(cmd: &str) -> Option<fn(I) -> io::Result<()>>
 where
     I: Iterator<Item = &'a str>,
 {
@@ -20,7 +20,10 @@ where
     Ok(())
 }
 
-fn execute<'a, I: Iterator<Item = &'a str>>(mut args: I) -> io::Result<()> {
+fn execute<'a, I>(mut args: I) -> io::Result<()>
+where
+    I: Iterator<Item = &'a str>,
+{
     match args.next() {
         Some(cmd) => match find_builtin::<I>(&cmd) {
             Some(func) => func(args),
