@@ -1,4 +1,5 @@
 use std::io::{self, Error, ErrorKind, Write};
+use std::process::Command;
 
 fn split_line(line: &str) -> impl Iterator<Item = &str> {
     line.trim().split_whitespace()
@@ -16,8 +17,13 @@ fn launch<'a, I>(cmd: &str, args: I) -> io::Result<()>
 where
     I: Iterator<Item = &'a str>,
 {
-    // TODO implement
-    Ok(())
+    match Command::new(cmd).args(args).status() {
+        Ok(_) => Ok(()),
+        Err(err) => {
+            println!("{}", err);
+            Ok(())
+        }
+    }
 }
 
 fn execute<'a, I>(mut args: I) -> io::Result<()>
