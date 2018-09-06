@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::io::{self, Error, ErrorKind, Write};
 use std::process::Command;
 
@@ -5,17 +6,12 @@ fn split_line(line: &str) -> impl Iterator<Item = &str> {
     line.trim().split_whitespace()
 }
 
-fn find_builtin<'a, I>(cmd: &str) -> Option<fn(I) -> io::Result<()>>
-where
-    I: Iterator<Item = &'a str>,
+fn create_builtins() -> HashMap<String, fn(&[String]) -> io::Result<()>>
 {
-    // TODO implement
-    None
+    HashMap::new()
 }
 
-fn launch<'a, I>(cmd: &str, args: I) -> io::Result<()>
-where
-    I: Iterator<Item = &'a str>,
+fn launch(cmd: &str, args: &[String]) -> io::Result<()>
 {
     match Command::new(cmd).args(args).status() {
         Ok(_) => Ok(()),
@@ -26,27 +22,40 @@ where
     }
 }
 
-fn execute<'a, I>(mut args: I) -> io::Result<()>
-where
-    I: Iterator<Item = &'a str>,
+fn execute(
+    args: &[String],
+    builtins: &HashMap<String, fn(&[String]) -> io::Result<()>>,
+) -> io::Result<()>
 {
-    match args.next() {
-        Some(cmd) => match find_builtin::<I>(&cmd) {
-            Some(func) => func(args),
-            None => launch(cmd, args),
-        },
-        None => Err(Error::new(ErrorKind::InvalidInput, "command is not given")),
+    if args.len() < 1 {
+        return Err(Error::new(ErrorKind::InvalidInput, "command is not given"));
     }
+    let cmd = &args[0];
+    match builtins.get(cmd) {
+            Some(func) => func(&args[1..]),
+            None => launch(&cmd, &args[1..]),
+        }
+}
+
+fn conv<'a, 'b, I>(x : I) -> Vec<String>
+where I : Iterator<Item = &'a str>,
+{
+    let mut r: Vec<String> = Vec::new();
+    for e in x {
+        let s = e.to_string().clone();
+        r.push(s);
+    }
+    r
 }
 
 fn main_loop() -> io::Result<()> {
     let mut input = String::new();
-
+    let builtins = create_builtins();
     loop {
         print!("> ");
         io::stdout().flush().unwrap();
         io::stdin().read_line(&mut input)?;
-        execute(split_line(&input))?;
+        execute(&conv(split_line(&input)), &builtins)?;
         input.truncate(0);
         io::stdout().flush().unwrap();
     }
