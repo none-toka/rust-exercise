@@ -7,8 +7,11 @@ fn split_line(line: &str) -> impl Iterator<Item = &str> {
 }
 
 fn builtin_exit(args: &[String]) -> io::Result<()> {
-    // TODO implemnt
-    Ok(())
+    if args.len() > 1 {
+        return Err(Error::new(ErrorKind::InvalidInput, "too many arguments"));
+    }
+    let code = args.get(0).map_or(0, |n| n.parse::<i32>().unwrap_or(0));
+    std::process::exit(code)
 }
 
 fn create_builtins() -> HashMap<String, fn(&[String]) -> io::Result<()>> {
