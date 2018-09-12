@@ -1,5 +1,7 @@
 use std::collections::HashMap;
+use std::env;
 use std::io::{self, Error, ErrorKind, Write};
+use std::path::Path;
 use std::process::Command;
 
 fn split_line(line: &str) -> impl Iterator<Item = &str> {
@@ -14,9 +16,29 @@ fn builtin_exit(args: &[String]) -> io::Result<()> {
     std::process::exit(code)
 }
 
+fn builtin_cd(args: &[String]) -> io::Result<()> {
+    if args.len() > 1 {
+        return Err(Error::new(ErrorKind::InvalidInput, "too many arguments"));
+    }
+    if args.len() < 1 {
+        // TODO implement to move home directory after supporting environment variables
+        return Ok(());
+    }
+    let path = Path::new(args.get(0).unwrap());
+    match env::set_current_dir(path) {
+        Ok(()) => Ok(()),
+        Err(err) => {
+            // FIXME output more kind message
+            eprintln!("failed to change directory: {} ({:?})", path.display(), err);
+            Ok(())
+        }
+    }
+}
+
 fn create_builtins() -> HashMap<String, fn(&[String]) -> io::Result<()>> {
     let mut r: HashMap<String, fn(&[String]) -> io::Result<()>> = HashMap::new();
     r.insert("exit".to_string(), builtin_exit);
+    r.insert("cd".to_string(), builtin_cd);
     r
 }
 
