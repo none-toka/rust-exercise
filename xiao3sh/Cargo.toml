@@ -1,0 +1,6 @@
+[package]
+name = "xiao3sh"
+version = "0.1.0"
+authors = ["naokata <snaokata@gmail.com>"]
+
+[dependencies]
